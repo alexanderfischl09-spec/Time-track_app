@@ -9,19 +9,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Unzip project
-        run: unzip TimeTracker-projekt.zip -d .
+        run: |
+          unzip -o TimeTracker-projekt.zip -d extracted_files
+          # Falls die Dateien in einem Unterordner liegen, holen wir sie ins Hauptverzeichnis
+          if [ -d "extracted_files/TimeTracker-projekt" ]; then
+            cp -r extracted_files/TimeTracker-projekt/* .
+          else
+            cp -r extracted_files/* .
+          fi
+
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew || true
+
       - name: Build APK
-        run: |
-          chmod +x gradlew || true
-          ./gradlew assembleDebug
+        run: ./gradlew assembleDebug
+
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: '**/build/outputs/apk/debug/*.apk'
